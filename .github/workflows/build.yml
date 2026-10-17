@@ -514,9 +514,15 @@ jobs:
         if: steps.detect.outputs.type == 'flutter'
         working-directory: ${{ steps.detect.outputs.dir }}
         run: |
-          rm -f pubspec.lock
+          echo "=== 1. pub get (retry 3x untuk gangguan jaringan) ==="
+          for i in 1 2 3; do
+            flutter pub get && exit 0
+            echo "pub get gagal, coba lagi ($i/3)..."
+            sleep 5
+          done
 
-          echo "=== 1. pub get ==="
+          echo "=== 1b. hapus lock lalu resolve ulang ==="
+          rm -f pubspec.lock
           flutter pub get && exit 0
 
           echo "=== 2. pub upgrade ==="
@@ -580,13 +586,18 @@ jobs:
           fi
 
           echo "Running: $CMD $TASK"
-          $CMD "$TASK" \
-            --parallel --build-cache \
-            -Pandroid.injected.build.abi=arm64-v8a 2>&1 | tee build.log || {
+          for attempt in 1 2; do
+            $CMD "$TASK" \
+              --parallel --build-cache \
+              -Pandroid.injected.build.abi=arm64-v8a 2>&1 | tee build.log && break
+            echo "Build gagal (percobaan $attempt/2)"
+            if [ $attempt -eq 2 ]; then
               echo "::error::Build gagal. Cek log di atas."
               tail -100 build.log
               exit 1
-            }
+            fi
+            sleep 10
+          done
 
       - name: Debug - scan all APK
         if: failure()
