@@ -21,6 +21,9 @@ concurrency:
   group: build-${{ github.event.inputs.jobId }}
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -686,6 +689,21 @@ jobs:
 
           echo "APK_DIR=$APK_DIR" >> "$GITHUB_ENV"
           echo "APK_PATH=$APK" >> "$GITHUB_ENV"
+
+      - name: Upload APK ke release (jalur cepat)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then echo "APK tidak ada, lewati upload release"; exit 0; fi
+          cp "$APK_PATH" "$RUNNER_TEMP/app.apk"
+          for i in 1 2 3; do
+            if gh release upload "${{ github.event.inputs.jobId }}" "$RUNNER_TEMP/app.apk" --clobber --repo "$GITHUB_REPOSITORY"; then
+              echo "APK diupload ke release"; exit 0
+            fi
+            echo "upload release gagal ($i/3)"; sleep 5
+          done
+          exit 0
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
