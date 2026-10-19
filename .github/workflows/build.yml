@@ -486,7 +486,7 @@ jobs:
           done
 
           if [ "$(yq '.dependencies | has("better_player")' pubspec.yaml)" = "true" ]; then
-            yq -i '.dependency_overrides.path_provider //= "2.1.4"' pubspec.yaml
+            yq -i '.dependency_overrides.path_provider = (.dependency_overrides.path_provider // "2.1.4")' pubspec.yaml
           fi
 
           if [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
