@@ -516,6 +516,10 @@ jobs:
         if: steps.detect.outputs.type == 'flutter'
         working-directory: ${{ steps.detect.outputs.dir }}
         run: |
+          # Penting: GitHub Actions menjalankan run: dengan "bash -e", jadi tanpa
+          # set +e, kegagalan pertama (mis. OUT=$(flutter pub get)) langsung mematikan
+          # step sebelum fallback jalan dan tanpa menampilkan error apa pun.
+          set +e
           echo "=== 1. pub get (retry 3x untuk gangguan jaringan) ==="
           for i in 1 2 3; do
             flutter pub get && exit 0
