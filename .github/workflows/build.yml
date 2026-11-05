@@ -100,17 +100,17 @@ jobs:
             DIR=$(dirname "$PUBSPEC")
             echo "type=flutter" >> "$GITHUB_OUTPUT"
             echo "dir=$DIR"     >> "$GITHUB_OUTPUT"
-            echo "✅ Flutter project → $DIR"
+            echo "Flutter project → $DIR"
           elif [ -n "$GRADLEW" ]; then
             DIR=$(dirname "$GRADLEW")
             echo "type=gradle"  >> "$GITHUB_OUTPUT"
             echo "dir=$DIR"     >> "$GITHUB_OUTPUT"
-            echo "✅ Native Gradle project → $DIR"
+            echo "Native Gradle project → $DIR"
           elif [ -n "$SETTINGS" ]; then
             DIR=$(dirname "$SETTINGS")
             echo "type=gradle"  >> "$GITHUB_OUTPUT"
             echo "dir=$DIR"     >> "$GITHUB_OUTPUT"
-            echo "✅ Gradle project (no wrapper) → $DIR"
+            echo "Gradle project (no wrapper) → $DIR"
           else
             echo "::error::Project tidak dikenali (bukan Flutter / bukan Gradle)."
             find project_raw -maxdepth 3
@@ -367,19 +367,19 @@ jobs:
             flutter build apk $FLAGS 2>&1 | tee "$LOG"
 
             if [ -n "$(found)" ]; then
-              echo "✅ APK jadi (round $round)"
-              [ -n "$REMOVED" ] && echo "⚠️ Plugin dihapus otomatis (tidak dipakai di lib/):$REMOVED"
+              echo "APK jadi (round $round)"
+              [ -n "$REMOVED" ] && echo "Plugin dihapus otomatis (tidak dipakai di lib/):$REMOVED"
               exit 0
             fi
 
             if fatal_dart; then
-              echo "🛑 Error di kode Dart (lib/): tidak bisa diperbaiki otomatis"
+              echo "Error di kode Dart (lib/): tidak bisa diperbaiki otomatis"
               break
             fi
 
             MS=$(grep -oE "minSdkVersion [0-9]+ cannot be smaller than version [0-9]+" "$LOG" | grep -oE "[0-9]+$" | sort -n | tail -n 1)
             if [ -n "$MS" ]; then
-              echo "🔧 minSdk dinaikkan ke $MS"
+              echo "minSdk dinaikkan ke $MS"
               set_minsdk "$MS"
               continue
             fi
@@ -389,7 +389,7 @@ jobs:
             if grep -q "better_player" "$LOG" && grep -qE "path_provider|requires SDK version" "$LOG"; then
               if [ ! -f /tmp/tried_pp_override ]; then
                 touch /tmp/tried_pp_override
-                echo "🔧 better_player (git) konflik path_provider: pin path_provider ke 2.1.4"
+                echo "better_player (git) konflik path_provider: pin path_provider ke 2.1.4"
                 yq -i '.dependency_overrides.path_provider = (.dependency_overrides.path_provider // "2.1.4")' pubspec.yaml
                 flutter pub get
                 continue
@@ -400,7 +400,7 @@ jobs:
             if [ -n "$P" ] && [ "$(yq ".dependencies | has(\"$P\")" pubspec.yaml)" = "true" ]; then
               if [ ! -f "/tmp/tried_up_$P" ]; then
                 touch "/tmp/tried_up_$P"
-                echo "🔧 plugin $P gagal: coba upgrade versi"
+                echo "plugin $P gagal: coba upgrade versi"
                 yq -i ".dependencies.\"$P\" = \"any\"" pubspec.yaml
                 flutter pub upgrade "$P"
                 bash /tmp/fixplugins.sh
@@ -408,7 +408,7 @@ jobs:
               fi
               if [ ! -f "/tmp/tried_rm_$P" ]; then
                 touch "/tmp/tried_rm_$P"
-                echo "🔧 plugin $P tetap gagal: dihapus dari pubspec"
+                echo "plugin $P tetap gagal: dihapus dari pubspec"
                 yq -i "del(.dependencies.\"$P\")" pubspec.yaml
                 REMOVED="$REMOVED $P"
                 flutter pub get
@@ -419,14 +419,14 @@ jobs:
 
             if [ "$REGEN" -eq 0 ]; then
               REGEN=1
-              echo "🔧 android/ dibuat ulang"
+              echo "android/ dibuat ulang"
               regen_android
               flutter pub get
               continue
             fi
             if [ "$REGEN" -eq 1 ] && [ "$MODE" != "debug" ]; then
               REGEN=2
-              echo "🔧 coba tanpa shrink, semua ABI"
+              echo "coba tanpa shrink, semua ABI"
               FLAGS="--release --no-tree-shake-icons --no-shrink"
               continue
             fi
@@ -459,7 +459,7 @@ jobs:
           echo "$NAME" | grep -qE '^[a-z_][a-z0-9_]*$' || NAME="app_$(date +%s)"
 
           if [ ! -f pubspec.yaml ] || ! yq '.' pubspec.yaml > /dev/null 2>&1; then
-            echo "⚠️ pubspec rusak/tidak ada, dibangun ulang dari import kode Dart"
+            echo "pubspec rusak/tidak ada, dibangun ulang dari import kode Dart"
             [ -f pubspec.yaml ] && cp pubspec.yaml /tmp/pubspec.broken && cat -n /tmp/pubspec.broken | head -60
 
             {
@@ -505,7 +505,7 @@ jobs:
           fi
 
           if [ ! -f android/app/build.gradle ] && [ ! -f android/app/build.gradle.kts ]; then
-            echo "⚠️ android/ tidak lengkap, dibuat ulang (label, ikon, applicationId asli dipulihkan)"
+            echo "android/ tidak lengkap, dibuat ulang (label, ikon, applicationId asli dipulihkan)"
             bash /tmp/regen_android.sh "$PWD"
           fi
 
@@ -603,9 +603,9 @@ jobs:
           if [ -f gradlew ]; then
             chmod +x gradlew
             CMD="./gradlew"
-            echo "✅ Pakai gradle wrapper"
+            echo "Pakai gradle wrapper"
           else
-            echo "⚠️ gradlew tidak ada, generate wrapper dulu"
+            echo "gradlew tidak ada, generate wrapper dulu"
             gradle wrapper --gradle-version 8.7 || true
             if [ -f gradlew ]; then
               chmod +x gradlew
@@ -644,7 +644,7 @@ jobs:
           set -euo pipefail
           APK=""
 
-          echo "↩️ Strategy 1 (exclude intermediates/tmp/kotlin/.gradle)"
+          echo "Strategy 1 (exclude intermediates/tmp/kotlin/.gradle)"
           APK=$(find project_raw -type f -name "*.apk" \
                 -not -path "*/intermediates/*" \
                 -not -path "*/tmp/*" \
@@ -653,14 +653,14 @@ jobs:
                 2>/dev/null | head -n 1 || true)
 
           if [ -z "$APK" ]; then
-            echo "↩️ Strategy 2 (include intermediates)"
+            echo "Strategy 2 (include intermediates)"
             APK=$(find project_raw -type f -name "*.apk" \
                   -not -path "*/.gradle/*" \
                   2>/dev/null | head -n 1 || true)
           fi
 
           if [ -z "$APK" ]; then
-            echo "↩️ Strategy 3 (flutter-build path)"
+            echo "Strategy 3 (flutter-build path)"
             APK=$(find project_raw -type f -name "*.apk" \
                   -path "*/flutter-build/*" \
                   2>/dev/null | head -n 1 || true)
@@ -678,9 +678,9 @@ jobs:
 
           APK_DIR=$(dirname "$APK")
           APK_SIZE=$(stat -c%s "$APK" 2>/dev/null || echo "0")
-          echo "✅ APK ditemukan: $APK"
-          echo "📁 Folder: $APK_DIR"
-          echo "📦 Size: $APK_SIZE bytes"
+          echo "APK ditemukan: $APK"
+          echo "Folder: $APK_DIR"
+          echo "Size: $APK_SIZE bytes"
 
           if [ "$APK_SIZE" -lt 1000 ]; then
             echo "::error::APK terlalu kecil ($APK_SIZE bytes), kemungkinan corrupt."
